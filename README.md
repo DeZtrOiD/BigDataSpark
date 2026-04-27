@@ -1,3 +1,34 @@
+# Отчёт
+## Общее описание
+Реализована только обязательная часть. Код преобразования исходных данных в звезду и код заполняющий отчеты в ClickHouse находится в [spark/scripts](spark/scripts/). Postgres инициализируется с помощью SQL скриптов находящихся в [sql/](sql/).
+## Запуск
+Для запуска необходимо использовать одну команду:
+```
+docker compose up -d
+```
+После чего начнется создание контейнеров, обработка данных сначала с заполнением звезды в postgres, затем с созданием отчетов в ClickHouse.
+
+## Конфигурация для подключения
+
+1. PostgreSQL:
+    * host: localhost
+    * port: 5434
+    * database: postgreslab2
+    * user: user
+    * password: password
+
+2. ClickHouse:
+    * host: localhost
+    * http port: 8124
+    * native port: 9001
+    * database: clickhouselab2
+    * user: user
+    * password: password
+
+## Схема звезды
+
+![](star.png)
+
 # BigDataSpark
 
 Анализ больших данных - лабораторная работа №2 - ETL реализованный с помощью Spark

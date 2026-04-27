@@ -1,0 +1,75 @@
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lab2postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgreslab2
+    ports: ["5432:5432"]
+    volumes: 
+      - pg_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+      - ./исходные данные:/raw_data
+    networks: [bigdata-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q"]
+      interval: 15s
+      timeout: 2s
+      retries: 5
+      start_period: 10s
+
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8
+    container_name: lab2clickhouse
+    environment:
+      CLICKHOUSE_USER: user
+      CLICKHOUSE_PASSWORD: password
+      CLICKHOUSE_DB: clickhouselab2
+    ports: ["8123:8123", "9000:9000"]
+    volumes: ["ch_data:/var/lib/clickhouse"]
+    networks: [bigdata-net]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8123/ping || exit 1"]
+      interval: 15s
+      timeout: 2s
+      retries: 5
+      start_period: 15s
+
+
+  spark:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM apache/spark:4.0.2-python3
+        USER root
+        RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+        RUN wget -q -O /opt/spark/jars/postgresql-42.7.3.jar \
+              https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
+         && wget -q -O /opt/spark/jars/clickhouse-jdbc-0.9.8-all.jar \
+              https://repo1.maven.org/maven2/com/clickhouse/clickhouse-jdbc/0.9.8/clickhouse-jdbc-0.9.8-all.jar
+        WORKDIR /opt/spark
+        # Копируем entrypoint скрипт из локальной папки в образ
+        COPY spark/scripts/start_etl.sh /opt/spark/
+        RUN chmod +x /opt/spark/start_etl.sh
+        ENTRYPOINT ["/opt/spark/start_etl.sh"]
+    
+    container_name: sparklab2
+    depends_on:
+      postgres: {condition: service_healthy}
+      clickhouse: {condition: service_healthy}
+    volumes:
+      - ./data:/opt/spark/data
+      - ./spark/scripts:/opt/spark/scripts
+    networks: [bigdata-net]
+    ports: ["4040:4040"]
+
+volumes:
+  pg_data:
+  ch_data:
+
+networks:
+  bigdata-net:
+    driver: bridge

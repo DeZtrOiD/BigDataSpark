@@ -29,6 +29,10 @@ docker compose up -d
 
 ![](star.png)
 
+## Витрины
+
+![](clickhouse.png)
+
 # BigDataSpark
 
 Анализ больших данных - лабораторная работа №2 - ETL реализованный с помощью Spark

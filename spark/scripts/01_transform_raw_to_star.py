@@ -44,8 +44,8 @@ tables = [
 ]
 
 for name, table in tables:
-    print(f"-------------------------> {name}  <-------------------------")
-    table.write.mode("append").option("truncate", "true").jdbc(PG_URL, name, properties=PG_PROPS)
+    print(f"-------------------------> {name} <-------------------------")
+    table.write.mode("overwrite").option("truncate", "true").option("cascadeTruncate", "true").jdbc(PG_URL, name, properties=PG_PROPS)
 
 dim_customer_db = spark.read.jdbc(PG_URL, "dim_customer", properties=PG_PROPS)
 dim_seller_db = spark.read.jdbc(PG_URL, "dim_seller", properties=PG_PROPS)
